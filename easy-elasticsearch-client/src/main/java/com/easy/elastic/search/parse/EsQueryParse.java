@@ -101,8 +101,7 @@ public class EsQueryParse {
         if (request.getPageSize() > 0) {
             sourceBuilder.trackTotalHits(true);
         }
-        log.info("es query string: GET {}/_search \n {}", request.getIndex(),
-                JsonUtils.writeAsJson(JsonUtils.readAsMap(sourceBuilder.toString())));
+        log.info("es query string: GET {}/_search \n {}", request.getIndex(), JsonUtils.writeAsJson(JsonUtils.readAsMap(sourceBuilder.toString())));
 
 
         SearchRequest searchRequest = new SearchRequest(request.getIndex());
@@ -121,8 +120,7 @@ public class EsQueryParse {
         if (CollectionUtils.isNotEmpty(searchAfterRequest.getSearchAfterList())) {
             sourceBuilder.searchAfter(searchAfterRequest.getSearchAfterList().toArray());
         }
-        log.info("es query string: GET {}/_search \n {}", searchAfterRequest.getIndex(),
-                JsonUtils.writeAsJson(JsonUtils.readAsMap(sourceBuilder.toString())));
+        log.info("es query string: GET {}/_search \n {}", searchAfterRequest.getIndex(), JsonUtils.writeAsJson(JsonUtils.readAsMap(sourceBuilder.toString())));
         SearchRequest searchRequest = new SearchRequest(searchAfterRequest.getIndex());
         searchRequest.source(sourceBuilder);
         return searchRequest;
@@ -145,8 +143,7 @@ public class EsQueryParse {
         sourceBuilder.size(0);
         // 查询逻辑
         sourceBuilder.query(boolQueryBuilder);
-        log.info("es query string: GET {}/_search \n {}", index,
-                JsonUtils.writeAsJson(JsonUtils.readAsMap(sourceBuilder.toString())));
+        log.info("es query string: GET {}/_search \n {}", index, JsonUtils.writeAsJson(JsonUtils.readAsMap(sourceBuilder.toString())));
         searchRequest.source(sourceBuilder);
         return searchRequest;
     }
@@ -162,35 +159,28 @@ public class EsQueryParse {
         searchRequest.source(sourceBuilder);
         Scroll scroll = new Scroll(TimeValue.timeValueMinutes(scrollRequest.getKeepAliveTimeMinute()));
         searchRequest.scroll(scroll);
-        log.info("es query string: GET {}/_search \n {}", scrollRequest.getIndex(),
-                JsonUtils.writeAsJson(JsonUtils.readAsMap(sourceBuilder.toString())));
+        log.info("es query string: GET {}/_search \n {}", scrollRequest.getIndex(), JsonUtils.writeAsJson(JsonUtils.readAsMap(sourceBuilder.toString())));
         return searchRequest;
     }
 
     protected static <E extends EsBaseSearchParam> SearchSourceBuilder buildBoolQueryBuilder(SearchBaseRequest<E> requestParam) {
 
-        BoolQueryBuilder boolQueryBuilder = buildBoolQueryBuilder(requestParam.getParam(),
-                requestParam.getCustomQueries());
+        BoolQueryBuilder boolQueryBuilder = buildBoolQueryBuilder(requestParam.getParam(), requestParam.getCustomQueries());
         //处理聚合
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         buildAggBuilder(requestParam.getParam(), sourceBuilder);
         sourceBuilder.query(boolQueryBuilder);
         //返回字段指定
-        List<String> sourceIncludeFields = requestParam.getSourceIncludeFields();
-        List<String> sourceExcludeFields = requestParam.getSourceExcludeFields();
-        sourceBuilder.fetchSource(
-                CollectionUtils.isEmpty(sourceIncludeFields) ? null
-                        : sourceIncludeFields.toArray(new String[sourceIncludeFields.size()]),
-                CollectionUtils.isEmpty(sourceExcludeFields) ? null
-                        : sourceExcludeFields.toArray(new String[sourceExcludeFields.size()]));
+        String[] sourceIncludeFields = CollectionUtils.isEmpty(requestParam.getSourceIncludeFields()) ? null : requestParam.getSourceIncludeFields().toArray(new String[0]);
+        String[] sourceExcludeFields = CollectionUtils.isEmpty(requestParam.getSourceExcludeFields()) ? null : requestParam.getSourceExcludeFields().toArray(new String[0]);
+        sourceBuilder.fetchSource(sourceIncludeFields, sourceExcludeFields);
         // 默认排序字段
         setSortFields(requestParam.getOrderByFieldList(), sourceBuilder);
         return sourceBuilder;
     }
 
 
-    private static <E extends EsBaseSearchParam> BoolQueryBuilder buildBoolQueryBuilder(E userInputQueryParam,
-                                                                                        Supplier<QueryBuilder>[] customQueries) {
+    private static <E extends EsBaseSearchParam> BoolQueryBuilder buildBoolQueryBuilder(E userInputQueryParam, Supplier<QueryBuilder>[] customQueries) {
 
         BoolQueryBuilder boolQueryBuilder;
         if (userInputQueryParam == null) {
@@ -230,8 +220,7 @@ public class EsQueryParse {
         getAggBuilder(userInputQueryParam, null, sourceBuilder, null);
     }
 
-    private static <E extends EsBaseSearchParam> void getAggBuilder(E userInputQueryParam, String nestedPath, SearchSourceBuilder sourceBuilder,
-                                                                    AggregationBuilder aggregation) {
+    private static <E extends EsBaseSearchParam> void getAggBuilder(E userInputQueryParam, String nestedPath, SearchSourceBuilder sourceBuilder, AggregationBuilder aggregation) {
         Class<?> clazz = userInputQueryParam.getClass();
         List<Field> fields = getAllFields(clazz);
 
@@ -241,8 +230,7 @@ public class EsQueryParse {
                 if ("serialVersionUID".equals(field.getName()) || field.isSynthetic()) {
                     continue;
                 }
-                Object value = ClassUtils.getPublicMethod(userInputQueryParam.getClass(), "get" + captureName(field.getName()))
-                        .invoke(userInputQueryParam);
+                Object value = ClassUtils.getPublicMethod(userInputQueryParam.getClass(), "get" + captureName(field.getName())).invoke(userInputQueryParam);
 
                 try {
                     if (field.isAnnotationPresent(EsAggs.class)) {
@@ -256,50 +244,42 @@ public class EsQueryParse {
                             continue;
                         }
                         EsFilter filter = field.getAnnotation(EsFilter.class);
-                        FilterAggregationBuilder builder = AggregationBuilders
-                                .filter(getFiledName(field, filter.name(), nestedPath), getBoolQueryBuilder((EsBaseSearchParam) value));
+                        FilterAggregationBuilder builder = AggregationBuilders.filter(getFiledName(field, filter.name(), nestedPath), getBoolQueryBuilder((EsBaseSearchParam) value));
                         setBuilder(nestedPath, sourceBuilder, aggregation, value, false, builder);
                     }
                     if (field.isAnnotationPresent(EsSum.class)) {
                         EsSum annotation = field.getAnnotation(EsSum.class);
-                        SumAggregationBuilder builder = AggregationBuilders.sum(annotation.aggName())
-                                .field(getFiledName(field, annotation.name(), nestedPath));
+                        SumAggregationBuilder builder = AggregationBuilders.sum(annotation.aggName()).field(getFiledName(field, annotation.name(), nestedPath));
                         setBuilder(nestedPath, sourceBuilder, aggregation, value, false, builder);
                     }
                     if (field.isAnnotationPresent(EsAvg.class)) {
                         EsAvg annotation = field.getAnnotation(EsAvg.class);
-                        AvgAggregationBuilder builder = AggregationBuilders.avg(annotation.aggName())
-                                .field(getFiledName(field, annotation.name(), nestedPath));
+                        AvgAggregationBuilder builder = AggregationBuilders.avg(annotation.aggName()).field(getFiledName(field, annotation.name(), nestedPath));
                         setBuilder(nestedPath, sourceBuilder, aggregation, value, false, builder);
                     }
                     if (field.isAnnotationPresent(EsCount.class)) {
                         EsCount annotation = field.getAnnotation(EsCount.class);
-                        ValueCountAggregationBuilder builder = AggregationBuilders.count(annotation.aggName())
-                                .field(getFiledName(field, annotation.name(), nestedPath));
+                        ValueCountAggregationBuilder builder = AggregationBuilders.count(annotation.aggName()).field(getFiledName(field, annotation.name(), nestedPath));
                         setBuilder(nestedPath, sourceBuilder, aggregation, value, false, builder);
                     }
                     if (field.isAnnotationPresent(EsCardinality.class)) {
                         EsCardinality annotation = field.getAnnotation(EsCardinality.class);
-                        CardinalityAggregationBuilder builder = AggregationBuilders.cardinality(annotation.aggName())
-                                .field(getFiledName(field, annotation.name(), nestedPath));
+                        CardinalityAggregationBuilder builder = AggregationBuilders.cardinality(annotation.aggName()).field(getFiledName(field, annotation.name(), nestedPath));
                         setBuilder(nestedPath, sourceBuilder, aggregation, value, false, builder);
                     }
                     if (field.isAnnotationPresent(EsMax.class)) {
                         EsMax annotation = field.getAnnotation(EsMax.class);
-                        MaxAggregationBuilder builder = AggregationBuilders.max(annotation.aggName())
-                                .field(getFiledName(field, annotation.name(), nestedPath));
+                        MaxAggregationBuilder builder = AggregationBuilders.max(annotation.aggName()).field(getFiledName(field, annotation.name(), nestedPath));
                         setBuilder(nestedPath, sourceBuilder, aggregation, value, false, builder);
                     }
                     if (field.isAnnotationPresent(EsMin.class)) {
                         EsMin annotation = field.getAnnotation(EsMin.class);
-                        MinAggregationBuilder builder = AggregationBuilders.min(annotation.aggName())
-                                .field(getFiledName(field, annotation.name(), nestedPath));
+                        MinAggregationBuilder builder = AggregationBuilders.min(annotation.aggName()).field(getFiledName(field, annotation.name(), nestedPath));
                         setBuilder(nestedPath, sourceBuilder, aggregation, value, false, builder);
                     }
                     if (field.isAnnotationPresent(EsAggTerms.class)) {
                         EsAggTerms annotation = field.getAnnotation(EsAggTerms.class);
-                        TermsAggregationBuilder builder = AggregationBuilders.terms(annotation.aggName())
-                                .field(getFiledName(field, annotation.name(), nestedPath)).size(annotation.size());
+                        TermsAggregationBuilder builder = AggregationBuilders.terms(annotation.aggName()).field(getFiledName(field, annotation.name(), nestedPath)).size(annotation.size());
                         setBuilder(nestedPath, sourceBuilder, aggregation, value, annotation.hasSubAgg(), builder);
                     }
                     if (field.isAnnotationPresent(EsAggNested.class)) {
@@ -319,8 +299,7 @@ public class EsQueryParse {
         }
     }
 
-    private static void setBuilder(String nestedPath, SearchSourceBuilder sourceBuilder, AggregationBuilder aggregation,
-                                   Object value, boolean hasSubAgg, AggregationBuilder subBuilder) {
+    private static void setBuilder(String nestedPath, SearchSourceBuilder sourceBuilder, AggregationBuilder aggregation, Object value, boolean hasSubAgg, AggregationBuilder subBuilder) {
         if (hasSubAgg) {
             getAggBuilder((EsBaseSearchParam) value, nestedPath, sourceBuilder, subBuilder);
         }
@@ -379,32 +358,26 @@ public class EsQueryParse {
                             buildQueryMustNot(boolQueryBuilder, v, query, null);
                         }
 
-                    } else if (EsSearchTypeEnum.esIn.name().equals(searchType)
-                            && CollectionUtils.isNotEmpty(v.getValueList())) {
+                    } else if (EsSearchTypeEnum.esIn.name().equals(searchType) && CollectionUtils.isNotEmpty(v.getValueList())) {
                         if (StringUtils.isNotBlank(v.getNested())) {
                             if (EsNestedTypeEnum.field.name().equals(v.getNestedType())) {
-                                QueryBuilder query = QueryBuilders.termsQuery(k + "." + v.getNested(),
-                                        v.getValueList());
+                                QueryBuilder query = QueryBuilders.termsQuery(k + "." + v.getNested(), v.getValueList());
                                 buildQuery(boolQueryBuilder, v, query, k);
                             } else {
-                                QueryBuilder query = QueryBuilders.termsQuery(v.getNested() + "." + k,
-                                        v.getValueList());
+                                QueryBuilder query = QueryBuilders.termsQuery(v.getNested() + "." + k, v.getValueList());
                                 buildQuery(boolQueryBuilder, v, query, v.getNested());
                             }
                         } else {
                             QueryBuilder query = QueryBuilders.termsQuery(k, v.getValueList());
                             buildQuery(boolQueryBuilder, v, query, null);
                         }
-                    } else if (EsSearchTypeEnum.esNotIn.name().equals(searchType)
-                            && CollectionUtils.isNotEmpty(v.getValueList())) {
+                    } else if (EsSearchTypeEnum.esNotIn.name().equals(searchType) && CollectionUtils.isNotEmpty(v.getValueList())) {
                         if (StringUtils.isNotBlank(v.getNested())) {
                             if (EsNestedTypeEnum.field.name().equals(v.getNestedType())) {
-                                QueryBuilder query = QueryBuilders.termsQuery(k + "." + v.getNested(),
-                                        v.getValueList());
+                                QueryBuilder query = QueryBuilders.termsQuery(k + "." + v.getNested(), v.getValueList());
                                 buildQueryMustNot(boolQueryBuilder, v, query, k);
                             } else {
-                                QueryBuilder query = QueryBuilders.termsQuery(v.getNested() + "." + k,
-                                        v.getValueList());
+                                QueryBuilder query = QueryBuilders.termsQuery(v.getNested() + "." + k, v.getValueList());
                                 buildQueryMustNot(boolQueryBuilder, v, query, v.getNested());
                             }
                         } else {
@@ -421,8 +394,7 @@ public class EsQueryParse {
                     } else if (EsSearchTypeEnum.esNotLike.name().equals(searchType) && v.getValue() != null) {
                         String val = wildcardOptimize(v.getValue().toString());
                         if (StringUtils.isNotBlank(val)) {
-                            WildcardQueryBuilder wildcardQueryBuilder = QueryBuilders.wildcardQuery(getName(k, v),
-                                    "*" + wildcardOptimize(val) + "*");
+                            WildcardQueryBuilder wildcardQueryBuilder = QueryBuilders.wildcardQuery(getName(k, v), "*" + wildcardOptimize(val) + "*");
                             buildQueryMustNot(boolQueryBuilder, v, wildcardQueryBuilder, v.getNested());
                         }
 
@@ -433,12 +405,10 @@ public class EsQueryParse {
                         //默认包含边界
                         RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(getName(k, v));
                         if (v.getStartValue() != null) {
-                            rangeQueryBuilder.from(v.getStartValue())
-                                    .includeLower(BooleanUtils.isNotFalse(v.getIncludeLower()));
+                            rangeQueryBuilder.from(v.getStartValue()).includeLower(BooleanUtils.isNotFalse(v.getIncludeLower()));
                         }
                         if (v.getEndValue() != null) {
-                            rangeQueryBuilder.to(v.getEndValue())
-                                    .includeUpper(BooleanUtils.isNotFalse(v.getIncludeUpper()));
+                            rangeQueryBuilder.to(v.getEndValue()).includeUpper(BooleanUtils.isNotFalse(v.getIncludeUpper()));
                         }
                         buildQuery(boolQueryBuilder, v, rangeQueryBuilder, v.getNested());
 
@@ -455,8 +425,7 @@ public class EsQueryParse {
         }
     }
 
-    private static void buildQuery(BoolQueryBuilder boolQueryBuilder, DynamicSearchField v, QueryBuilder query,
-                                   String nestedPath) {
+    private static void buildQuery(BoolQueryBuilder boolQueryBuilder, DynamicSearchField v, QueryBuilder query, String nestedPath) {
         if (StringUtils.isNotBlank(nestedPath)) {
             NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(nestedPath, query, ScoreMode.None);
             boolQueryBuilder.filter(nestedQueryBuilder);
@@ -465,8 +434,7 @@ public class EsQueryParse {
         }
     }
 
-    private static void buildQueryMustNot(BoolQueryBuilder boolQueryBuilder, DynamicSearchField v, QueryBuilder query,
-                                          String nestedPath) {
+    private static void buildQueryMustNot(BoolQueryBuilder boolQueryBuilder, DynamicSearchField v, QueryBuilder query, String nestedPath) {
         if (StringUtils.isNotBlank(nestedPath)) {
             NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(nestedPath, query, ScoreMode.None);
             boolQueryBuilder.mustNot().add(nestedQueryBuilder);
@@ -514,8 +482,7 @@ public class EsQueryParse {
 
     private static Object getFieldValue(Object object, Field field) {
         try {
-            return ClassUtils.getPublicMethod(object.getClass(), "get" + captureName(field.getName()))
-                    .invoke(object);
+            return ClassUtils.getPublicMethod(object.getClass(), "get" + captureName(field.getName())).invoke(object);
         } catch (Exception e) {
             return null;
         }
@@ -525,8 +492,7 @@ public class EsQueryParse {
         return (field.getType() == String.class && StringUtils.isBlank((String) value));
     }
 
-    private static void processFieldAnnotations(Field field, Object value, String nestedPath,
-                                                BoolQueryBuilder boolQueryBuilder, Object userInputQueryParam) {
+    private static void processFieldAnnotations(Field field, Object value, String nestedPath, BoolQueryBuilder boolQueryBuilder, Object userInputQueryParam) {
         if (field.isAnnotationPresent(EsMulti.class) && value != null) {
             handleEsMultiAnnotation(field, value, nestedPath, boolQueryBuilder);
         }
@@ -667,17 +633,13 @@ public class EsQueryParse {
     }
 
     // 处理父子文档关系的字段（HasChild 和 HasParent）
-    private static void handleEsHasChildRelationAnnotation(Field field, Object value, String nestedPath, BoolQueryBuilder boolQueryBuilder,
-                                                           Object userInputQueryParam) {
-        HasChildQueryBuilder childQueryBuilder = getHasChildQueryBuilder(field.getAnnotation(EsHasChildRelation.class),
-                getBoolQueryBuilder((EsBaseSearchParam) value, nestedPath));
+    private static void handleEsHasChildRelationAnnotation(Field field, Object value, String nestedPath, BoolQueryBuilder boolQueryBuilder, Object userInputQueryParam) {
+        HasChildQueryBuilder childQueryBuilder = getHasChildQueryBuilder(field.getAnnotation(EsHasChildRelation.class), getBoolQueryBuilder((EsBaseSearchParam) value, nestedPath));
         boolQueryBuilder.filter(childQueryBuilder);
     }
 
-    private static void handleEsHasParentRelationAnnotation(Field field, Object value, String nestedPath, BoolQueryBuilder boolQueryBuilder,
-                                                            Object userInputQueryParam) {
-        HasParentQueryBuilder parentQueryBuilder = getHasParentQueryBuilder(getBoolQueryBuilder((EsBaseSearchParam) value, nestedPath),
-                field.getAnnotation(EsHasParentRelation.class));
+    private static void handleEsHasParentRelationAnnotation(Field field, Object value, String nestedPath, BoolQueryBuilder boolQueryBuilder, Object userInputQueryParam) {
+        HasParentQueryBuilder parentQueryBuilder = getHasParentQueryBuilder(getBoolQueryBuilder((EsBaseSearchParam) value, nestedPath), field.getAnnotation(EsHasParentRelation.class));
         boolQueryBuilder.filter(parentQueryBuilder);
     }
 
@@ -685,13 +647,11 @@ public class EsQueryParse {
         BoolQueryBuilder boolQueryBuilderTop;
         if (userInputQueryParam.getClass().isAnnotationPresent(EsHasChildRelation.class)) {
             boolQueryBuilderTop = QueryBuilders.boolQuery();
-            HasChildQueryBuilder hashChildQuery = getHasChildQueryBuilder(
-                    userInputQueryParam.getClass().getAnnotation(EsHasChildRelation.class), boolQueryBuilder);
+            HasChildQueryBuilder hashChildQuery = getHasChildQueryBuilder(userInputQueryParam.getClass().getAnnotation(EsHasChildRelation.class), boolQueryBuilder);
             boolQueryBuilderTop.filter(hashChildQuery);
         } else if (userInputQueryParam.getClass().isAnnotationPresent(EsHasParentRelation.class)) {
             boolQueryBuilderTop = QueryBuilders.boolQuery();
-            HasParentQueryBuilder parentQueryBuilder = getHasParentQueryBuilder(
-                    boolQueryBuilder, userInputQueryParam.getClass().getAnnotation(EsHasParentRelation.class));
+            HasParentQueryBuilder parentQueryBuilder = getHasParentQueryBuilder(boolQueryBuilder, userInputQueryParam.getClass().getAnnotation(EsHasParentRelation.class));
             boolQueryBuilderTop.filter(parentQueryBuilder);
         } else {
             boolQueryBuilderTop = boolQueryBuilder;
@@ -722,9 +682,7 @@ public class EsQueryParse {
     private static HasParentQueryBuilder getHasParentQueryBuilder(QueryBuilder builder, EsHasParentRelation relation) {
         HasParentQueryBuilder childQueryBuilder = new HasParentQueryBuilder(relation.parentType(), builder, false);
         if (relation.returnInnerHits()) {
-            InnerHitBuilder innerHitBuilder = StringUtils.isNotBlank(relation.innerHitsName())
-                    ? new InnerHitBuilder(relation.innerHitsName())
-                    : new InnerHitBuilder();
+            InnerHitBuilder innerHitBuilder = StringUtils.isNotBlank(relation.innerHitsName()) ? new InnerHitBuilder(relation.innerHitsName()) : new InnerHitBuilder();
             innerHitBuilder.setSize(relation.innerHitsSize());
             childQueryBuilder.innerHit(innerHitBuilder);
         }
@@ -735,9 +693,7 @@ public class EsQueryParse {
     private static HasChildQueryBuilder getHasChildQueryBuilder(EsHasChildRelation relation, QueryBuilder builder) {
         HasChildQueryBuilder childQueryBuilder = new HasChildQueryBuilder(relation.type(), builder, ScoreMode.None);
         if (relation.returnInnerHits()) {
-            InnerHitBuilder innerHitBuilder = StringUtils.isNotBlank(relation.innerHitsName())
-                    ? new InnerHitBuilder(relation.innerHitsName())
-                    : new InnerHitBuilder();
+            InnerHitBuilder innerHitBuilder = StringUtils.isNotBlank(relation.innerHitsName()) ? new InnerHitBuilder(relation.innerHitsName()) : new InnerHitBuilder();
             innerHitBuilder.setSize(relation.innerHitsSize());
             childQueryBuilder.innerHit(innerHitBuilder);
         }
@@ -748,8 +704,7 @@ public class EsQueryParse {
         EsIn esIn = field.getAnnotation(EsIn.class);
 
         String filedName = getFiledName(field, esIn.name(), nestedPath);
-        List<?> _value = CollectionUtils.isEmpty(value) ? new ArrayList<>()
-                : value.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        List<?> _value = CollectionUtils.isEmpty(value) ? new ArrayList<>() : value.stream().filter(Objects::nonNull).collect(Collectors.toList());
         if (!esIn.leftLike() && !esIn.rightLike()) {
             //单纯的in
             return QueryBuilders.termsQuery(filedName, _value);
@@ -853,8 +808,7 @@ public class EsQueryParse {
         if (CollectionUtils.isEmpty(value)) {
             return new ArrayList<>();
         }
-        return value.stream().map(item -> getFiledName(item, nestedPath)).map(QueryBuilders::existsQuery)
-                .collect(Collectors.toList());
+        return value.stream().map(item -> getFiledName(item, nestedPath)).map(QueryBuilders::existsQuery).collect(Collectors.toList());
     }
 
     private static <E extends EsBaseSearchParam> NestedQueryBuilder getNestedQuery(Field field, E userInputQueryParam) {
