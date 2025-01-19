@@ -223,8 +223,6 @@ public class EsQueryParse {
     private static <E> void getAggBuilder(E userInputQueryParam, String nestedPath, SearchSourceBuilder sourceBuilder, AggregationBuilder aggregation) {
         Class<?> clazz = userInputQueryParam.getClass();
         List<Field> fields = getAllFields(clazz);
-
-        nestedPath = nestedPath == null ? "" : nestedPath;
         try {
             for (Field field : fields) {
                 if ("serialVersionUID".equals(field.getName()) || field.isSynthetic()) {
@@ -451,8 +449,6 @@ public class EsQueryParse {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         Class<?> clazz = userInputQueryParam.getClass();
         List<Field> fields = getAllFields(clazz);
-
-        nestedPath = nestedPath == null ? "" : nestedPath;
         for (Field field : fields) {
             if ("serialVersionUID".equals(field.getName()) || field.isSynthetic()) {
                 continue;
@@ -486,10 +482,6 @@ public class EsQueryParse {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    private static boolean isEmpty(Object value, Field field) {
-        return (field.getType() == String.class && StringUtils.isBlank((String) value));
     }
 
     private static void processFieldAnnotations(Field field, Object value, String nestedPath, BoolQueryBuilder boolQueryBuilder, Object userInputQueryParam) {
@@ -837,10 +829,6 @@ public class EsQueryParse {
             return fileName;
         }
         return nestedPath + "." + fileName;
-    }
-
-    private static String getFiledName(String name, String nestedPath) {
-        return getFiledName(null, name, nestedPath);
     }
 
     public static String captureName(String name) {
