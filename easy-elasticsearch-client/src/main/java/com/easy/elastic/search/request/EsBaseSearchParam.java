@@ -8,7 +8,7 @@ import java.util.Map;
 
 /**
  * @author yida
- * @description ES查询用户输入参数基类
+ * @description ES查询用户输入参数基类，使用动态字段搜索，必须继承此类，其他场景可以不继承
  * @date 2025-01-17 10:47:11
  * @return {@link null}
  */

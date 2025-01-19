@@ -20,7 +20,7 @@ public class SearchBaseRequest<E> implements Serializable {
     private E                        param;
 
     /**
-     * 索引名
+     * 索引名或者别名
      */
     private String                   index;
     /**
