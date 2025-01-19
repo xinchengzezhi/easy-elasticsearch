@@ -173,12 +173,6 @@ public class EsQueryParse {
                 requestParam.getCustomQueries());
         //处理聚合
         buildAggBuilder(requestParam.getParam(), sourceBuilder);
-        //增加租户处理
-        if (requestParam.getDealTenant()
-                && StringUtils.isNotBlank(requestParam.getTenantId())) {
-            TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery("tenantId", requestParam.getTenantId());
-            boolQueryBuilder.filter(termQueryBuilder);
-        }
         sourceBuilder.query(boolQueryBuilder);
         //返回字段指定
         List<String> sourceIncludeFields = requestParam.getSourceIncludeFields();
@@ -221,9 +215,7 @@ public class EsQueryParse {
      * @param sourceBuilder
      */
     private static void setSortFields(List<Order> orderList, SearchSourceBuilder sourceBuilder) {
-        if (CollectionUtils.isEmpty(orderList)) {
-//            sourceBuilder.sort(SortBuilders.fieldSort("_id").order(SortOrder.DESC));
-        } else {
+        if (CollectionUtils.isNotEmpty(orderList)) {
             for (Order order : orderList) {
                 sourceBuilder.sort(order.getOrderByField(), SortOrder.fromString(order.getOrderType()));
             }
@@ -593,8 +585,14 @@ public class EsQueryParse {
                 }
             });
         } else {
-            multiBool.filter(getMultiQuery(field, value, nestedPath));
+            if (esMulti.isAnd()) {
+                multiBool.filter(getMultiQuery(field, value, nestedPath));
+            } else {
+                multiBool.should(getMultiQuery(field, value, nestedPath));
+            }
+
         }
+
         boolQueryBuilder.filter(multiBool);
     }
 

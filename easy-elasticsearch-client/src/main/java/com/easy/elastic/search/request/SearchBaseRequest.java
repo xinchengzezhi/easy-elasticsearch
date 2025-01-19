@@ -15,10 +15,6 @@ import java.util.function.Supplier;
 @Data
 public class SearchBaseRequest<E extends EsBaseSearchParam> implements Serializable {
     /**
-     * 租户ID
-     */
-    private String                   tenantId;
-    /**
      * 入参
      */
     private E                        param;
@@ -47,8 +43,4 @@ public class SearchBaseRequest<E extends EsBaseSearchParam> implements Serializa
      */
     private Supplier<QueryBuilder>[] customQueries;
 
-    /**
-     * 是否处理租户,默认不处理租户
-     */
-    private Boolean dealTenant;
 }
