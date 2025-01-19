@@ -1,7 +1,7 @@
 # 应用说明
 **Easy Elasticsearch**: 注解驱动的轻量级Elasticsearch搜索组件
 
-Easy Elasticsearch是一基于Java注解驱动搜索组件，专为提升Elasticsearch检索开发效率而设计。我们的目标是简化复杂的ES查询流程，让开发者能够专注于业务逻辑，而非技术细节。
+Easy Elasticsearch是一款基于Java注解驱动搜索组件，专为提升Elasticsearch检索开发效率而设计。我们的目标是简化复杂的ES查询流程，让开发者能够专注于业务逻辑，而非技术细节。
 
 ### 核心优势：
 1. 注解驱动：仅需在Java对象属性上添加简单注解，即可快速构建复杂查询
