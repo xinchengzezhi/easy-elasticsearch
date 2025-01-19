@@ -168,10 +168,11 @@ public class EsQueryParse {
     }
 
     protected static <E extends EsBaseSearchParam> SearchSourceBuilder buildBoolQueryBuilder(SearchBaseRequest<E> requestParam) {
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        BoolQueryBuilder boolQueryBuilder = buildBoolQueryBuilder(requestParam.getParam(), sourceBuilder,
+
+        BoolQueryBuilder boolQueryBuilder = buildBoolQueryBuilder(requestParam.getParam(),
                 requestParam.getCustomQueries());
         //处理聚合
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         buildAggBuilder(requestParam.getParam(), sourceBuilder);
         sourceBuilder.query(boolQueryBuilder);
         //返回字段指定
@@ -188,7 +189,7 @@ public class EsQueryParse {
     }
 
 
-    private static <E extends EsBaseSearchParam> BoolQueryBuilder buildBoolQueryBuilder(E userInputQueryParam, SearchSourceBuilder sourceBuilder,
+    private static <E extends EsBaseSearchParam> BoolQueryBuilder buildBoolQueryBuilder(E userInputQueryParam,
                                                                                         Supplier<QueryBuilder>[] customQueries) {
 
         BoolQueryBuilder boolQueryBuilder;
@@ -197,10 +198,10 @@ public class EsQueryParse {
         } else {
             boolQueryBuilder = getBoolQueryBuilder(userInputQueryParam);
         }
-        if (customQueries != null && customQueries.length > 0) {
-            for (int i = 0; i < customQueries.length; i++) {
-                if (customQueries[i] != null) {
-                    boolQueryBuilder.filter(customQueries[i].get());
+        if (customQueries != null) {
+            for (Supplier<QueryBuilder> customQuery : customQueries) {
+                if (customQuery != null) {
+                    boolQueryBuilder.filter(customQuery.get());
                 }
             }
         }
