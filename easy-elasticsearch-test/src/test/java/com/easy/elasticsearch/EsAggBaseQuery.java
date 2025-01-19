@@ -1,15 +1,7 @@
-package com.easy.elasticsearch.controller;
+package com.easy.elasticsearch;
 
 import com.easy.elastic.search.annotation.EsEquals;
-import com.easy.elastic.search.annotation.agg.EsAggNested;
-import com.easy.elastic.search.annotation.agg.EsAggTerms;
-import com.easy.elastic.search.annotation.agg.EsAggs;
-import com.easy.elastic.search.annotation.agg.EsAvg;
-import com.easy.elastic.search.annotation.agg.EsCardinality;
-import com.easy.elastic.search.annotation.agg.EsCount;
-import com.easy.elastic.search.annotation.agg.EsFilter;
-import com.easy.elastic.search.annotation.agg.EsMax;
-import com.easy.elastic.search.annotation.agg.EsSum;
+import com.easy.elastic.search.annotation.agg.*;
 import com.easy.elastic.search.request.EsBaseSearchParam;
 import lombok.Data;
 
