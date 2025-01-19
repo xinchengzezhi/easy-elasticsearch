@@ -49,9 +49,10 @@ Easy Elasticsearch是一款革新性的Java注解驱动搜索组件，专为提�
 ```
 ### 2.项目正常配置es的地址 es config
 ```properties
-spring.elasticsearch.rest.uris= http://127.0.0.1:9200,http://127.0.0.2:9200
-spring.elasticsearch.rest.username= elastic
-spring.elasticsearch.rest.password= elastic
+如果项目中已经你使用了spring-data-elasticsearch，或者以别的方式已经接入es,就不用再配了，忽略此步骤
+elasticsearch.hosts=http://127.0.0.1:9200,http://127.0.0.2:9200
+elasticsearch.username=elastic
+elasticsearch.password=elastic
 ```
 
 `
