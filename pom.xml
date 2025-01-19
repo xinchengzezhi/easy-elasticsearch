@@ -16,6 +16,7 @@
     <modules>
         <module>easy-elasticsearch-bootstrap</module>
         <module>easy-elasticsearch-client</module>
+        <module>easy-elasticsearch-test</module>
     </modules>
     <properties>
         <java.version>1.8</java.version>

@@ -1,4 +1,4 @@
-package com.easy.elasticsearch.controller;
+package com.easy.elasticsearch;
 
 import com.easy.elastic.search.annotation.EsEquals;
 import com.easy.elastic.search.annotation.EsLike;
