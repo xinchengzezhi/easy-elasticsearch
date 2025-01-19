@@ -449,15 +449,13 @@ public class EsQueryParse {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         Class<?> clazz = userInputQueryParam.getClass();
         List<Field> fields = getAllFields(clazz);
+
         for (Field field : fields) {
             if ("serialVersionUID".equals(field.getName()) || field.isSynthetic()) {
                 continue;
             }
-
             Object value = getFieldValue(userInputQueryParam, field);
-
             processFieldAnnotations(field, value, nestedPath, boolQueryBuilder, userInputQueryParam);
-
         }
 
         //动态字段
