@@ -6,6 +6,8 @@ import com.easy.elastic.search.annotation.EsMulti;
 import com.easy.elastic.search.annotation.EsRange;
 import com.easy.elastic.search.request.EsBaseSearchParam;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import java.io.Serializable;
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.List;
  * @version: 1.0.0
  * @date: 2024-08-11 20:24
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class DefaultEsBaseSearchParam extends EsBaseSearchParam implements Serializable {
 
@@ -54,6 +57,7 @@ public class DefaultEsBaseSearchParam extends EsBaseSearchParam implements Seria
     @EsMulti
     protected List<EsOrgMultiQuery> esOrgMultiQuery;
 
+    @Getter
     public static class DefaultEsBaseSearchParamBuilder extends EsBaseSearchParamBuilder {
         private String id;
         private String tenantId;
@@ -111,32 +115,5 @@ public class DefaultEsBaseSearchParam extends EsBaseSearchParam implements Seria
             return this;
         }
 
-        public String getId() {
-            return id;
-        }
-
-        public String getTenantId() {
-            return tenantId;
-        }
-
-        public String getPurOrgName() {
-            return purOrgName;
-        }
-
-        public Long getSupCompanyId() {
-            return supCompanyId;
-        }
-
-        public Long getCreateTimeStart() {
-            return createTimeStart;
-        }
-
-        public Long getCreateTimeEnd() {
-            return createTimeEnd;
-        }
-
-        public List<EsOrgMultiQuery> getEsOrgMultiQuery() {
-            return esOrgMultiQuery;
-        }
     }
 }

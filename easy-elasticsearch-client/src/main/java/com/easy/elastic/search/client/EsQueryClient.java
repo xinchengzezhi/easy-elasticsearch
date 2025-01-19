@@ -45,13 +45,13 @@ public class EsQueryClient {
     private RestHighLevelClient restHighLevelClient;
 
     /**
-     * @Description: 分页查询es,默认支持10000条，支持排序字段显示传递，推荐使用此方法
-     * @Author: liangbaole 
-     * @Date:  2023/4/6 20:24
+     * @Description: 分页查询es, 默认支持10000条，支持排序字段显示传递，推荐使用此方法
+     * @Author: liangbaole
+     * @Date: 2023/4/6 20:24
      * @param: oclass 出参类型
      * @return:
      **/
-    public <E extends EsBaseSearchParam, O> SearchPageResult<O> search(SearchPageRequest<E> request, Class<O> oclass) {
+    public <E, O> SearchPageResult<O> search(SearchPageRequest<E> request, Class<O> oclass) {
 
         SearchPageResult<O> pageResult = new SearchPageResult<>();
         StopWatch stopWatch = new StopWatch();
@@ -59,8 +59,7 @@ public class EsQueryClient {
         try {
             SearchRequest searchRequest = EsQueryParse.convert2EsPageQuery(request);
             SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            SearchHits hits = searchResponse.getHits();
-            pageResult.setTotalCount(hits.getTotalHits().value);
+            pageResult.setTotalCount(searchResponse.getHits().getTotalHits() == null ? 0 : searchResponse.getHits().getTotalHits().value);
             List<O> list = EsQueryResultParse.getRs(oclass, searchResponse);
             pageResult.setRecords(list);
             pageResult.setPageNum(request.getPageNum());
@@ -80,13 +79,14 @@ public class EsQueryClient {
 
     /**
      * searchAfter查询
+     *
      * @return 结果
-     *  @Author: liangbaole 
-     *  @Date:  2023/4/6 20:24
-     *  @param:oclass 出参类型
+     * @Author: liangbaole
+     * @Date: 2023/4/6 20:24
+     * @param:oclass 出参类型
      */
-    public <E extends EsBaseSearchParam, O> SearchAfterResult<O> searchAfter(SearchAfterRequest<E> request,
-                                                                             Class<O> oclass) {
+    public <E, O> SearchAfterResult<O> searchAfter(SearchAfterRequest<E> request,
+                                                   Class<O> oclass) {
 
         SearchAfterResult<O> pageResult = new SearchAfterResult<>();
         StopWatch stopWatch = new StopWatch();
@@ -94,10 +94,9 @@ public class EsQueryClient {
         try {
             SearchRequest searchRequest = EsQueryParse.convertSearchAfter2Query(request);
             SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-
             List<O> list = EsQueryResultParse.getRs(oclass, searchResponse);
             pageResult.setData(list);
-            pageResult.setTotalCount(searchResponse.getHits().getTotalHits().value);
+            pageResult.setTotalCount(searchResponse.getHits().getTotalHits() == null ? 0 : searchResponse.getHits().getTotalHits().value);
             // 获取最后一条记录, 并把 sort 的值赋值给 searchAfter
             SearchHit[] searchHits = searchResponse.getHits().getHits();
             if (searchHits != null && searchHits.length > 0) {
@@ -117,10 +116,11 @@ public class EsQueryClient {
 
     /**
      * scroll查询
+     *
      * @return 结果
      * @param: oclass 出参类型
      */
-    public <E extends EsBaseSearchParam, O> ScrollResult<O> scroll(ScrollRequest<E> request, Class<O> oclass) {
+    public <E, O> ScrollResult<O> scroll(ScrollRequest<E> request, Class<O> oclass) {
         ScrollResult<O> pageResult = new ScrollResult<>();
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
@@ -139,7 +139,7 @@ public class EsQueryClient {
             List<O> list = EsQueryResultParse.getRs(oclass, searchResponse);
             pageResult.setScrollId(searchResponse.getScrollId());
             pageResult.setData(list);
-            pageResult.setTotalCount(searchResponse.getHits().getTotalHits().value);
+            pageResult.setTotalCount(searchResponse.getHits().getTotalHits() == null ? 0 : searchResponse.getHits().getTotalHits().value);
             //使用完后清除scroll
             if (CollectionUtils.isEmpty(pageResult.getData())) {
                 ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
@@ -158,11 +158,11 @@ public class EsQueryClient {
     /**
      * @Description: 聚合
      * @Author: liangbaole
-     * @Date:  2023/4/6 20:24
+     * @Date: 2023/4/6 20:24
      * @param: oclass 出参类型
      * @return:
      **/
-    public <E extends EsBaseSearchParam> Map<String, EsAggregationResult> agg(SearchPageRequest<E> request) {
+    public <E> Map<String, EsAggregationResult> agg(SearchPageRequest<E> request) {
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
@@ -171,9 +171,7 @@ public class EsQueryClient {
             request.setPageNum(0);
             SearchRequest searchRequest = EsQueryParse.convert2EsPageQuery(request);
             SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            Map<String, EsAggregationResult> aggregationResultMap = EsQueryResultParse
-                .injectAggregations(searchResponse.getAggregations());
-            return aggregationResultMap;
+            return EsQueryResultParse.injectAggregations(searchResponse.getAggregations());
         } catch (IOException ex) {
             log.error("es查询时出现异常, index: {}, params: {}", request.getIndex(), request, ex);
         } finally {

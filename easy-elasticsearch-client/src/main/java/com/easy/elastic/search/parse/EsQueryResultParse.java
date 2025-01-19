@@ -54,9 +54,9 @@ public class EsQueryResultParse {
             if (MapUtils.isNotEmpty(hit.getInnerHits())) {
                 // 回写回去
                 ObjectNode objectNode = (ObjectNode) jsonNode;
-                hit.getInnerHits().entrySet().forEach(entry -> {
+                hit.getInnerHits().forEach((key, value) -> {
                     ArrayNode arrayNode = JsonUtils.getObjectMapper().createArrayNode();
-                    for (SearchHit innerHit : entry.getValue().getHits()) {
+                    for (SearchHit innerHit : value.getHits()) {
                         try {
                             JsonNode innerNode = JsonUtils.getObjectMapper().readTree(innerHit.getSourceAsString());
                             arrayNode.add(innerNode);
@@ -65,7 +65,7 @@ public class EsQueryResultParse {
                         }
 
                     }
-                    objectNode.set(entry.getKey(), arrayNode);
+                    objectNode.set(key, arrayNode);
                 });
 
             }

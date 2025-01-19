@@ -15,7 +15,7 @@ import java.util.List;
  */
 @Data
 @NoArgsConstructor
-public class SearchAfterRequest<E extends EsBaseSearchParam> extends SearchBaseRequest<E> implements Serializable {
+public class SearchAfterRequest<E> extends SearchBaseRequest<E> implements Serializable {
     /**
      * 每页大小
      */

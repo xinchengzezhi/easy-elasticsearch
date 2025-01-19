@@ -90,7 +90,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class EsQueryParse {
 
-    public static <E extends EsBaseSearchParam> SearchRequest convert2EsPageQuery(SearchPageRequest<E> request) {
+    public static <E> SearchRequest convert2EsPageQuery(SearchPageRequest<E> request) {
 
         //构建查询
         SearchSourceBuilder sourceBuilder = buildBoolQueryBuilder(request);
@@ -109,7 +109,7 @@ public class EsQueryParse {
         return searchRequest;
     }
 
-    public static <E extends EsBaseSearchParam> SearchRequest convertSearchAfter2Query(SearchAfterRequest<E> searchAfterRequest) {
+    public static <E> SearchRequest convertSearchAfter2Query(SearchAfterRequest<E> searchAfterRequest) {
 
         //构建查询
         SearchSourceBuilder sourceBuilder = buildBoolQueryBuilder(searchAfterRequest);
@@ -126,7 +126,7 @@ public class EsQueryParse {
         return searchRequest;
     }
 
-    public static <E extends EsBaseSearchParam> SearchRequest convert2AggQuery(String index, E userInputQueryParam, Supplier<QueryBuilder>... customQueries) {
+    public static <E> SearchRequest convert2AggQuery(String index, E userInputQueryParam, Supplier<QueryBuilder>... customQueries) {
         SearchRequest searchRequest = new SearchRequest(index);
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = getBoolQueryBuilder(userInputQueryParam);
@@ -148,7 +148,7 @@ public class EsQueryParse {
         return searchRequest;
     }
 
-    public static <E extends EsBaseSearchParam> SearchRequest convertScroll2Query(ScrollRequest<E> scrollRequest) {
+    public static <E> SearchRequest convertScroll2Query(ScrollRequest<E> scrollRequest) {
 
         //构建查询
         SearchSourceBuilder sourceBuilder = buildBoolQueryBuilder(scrollRequest);
@@ -163,7 +163,7 @@ public class EsQueryParse {
         return searchRequest;
     }
 
-    protected static <E extends EsBaseSearchParam> SearchSourceBuilder buildBoolQueryBuilder(SearchBaseRequest<E> requestParam) {
+    protected static <E> SearchSourceBuilder buildBoolQueryBuilder(SearchBaseRequest<E> requestParam) {
 
         BoolQueryBuilder boolQueryBuilder = buildBoolQueryBuilder(requestParam.getParam(), requestParam.getCustomQueries());
         //处理聚合
@@ -180,7 +180,7 @@ public class EsQueryParse {
     }
 
 
-    private static <E extends EsBaseSearchParam> BoolQueryBuilder buildBoolQueryBuilder(E userInputQueryParam, Supplier<QueryBuilder>[] customQueries) {
+    private static <E> BoolQueryBuilder buildBoolQueryBuilder(E userInputQueryParam, Supplier<QueryBuilder>[] customQueries) {
 
         BoolQueryBuilder boolQueryBuilder;
         if (userInputQueryParam == null) {
@@ -213,14 +213,14 @@ public class EsQueryParse {
         }
     }
 
-    private static <E extends EsBaseSearchParam> void buildAggBuilder(E userInputQueryParam, SearchSourceBuilder sourceBuilder) {
+    private static <E> void buildAggBuilder(E userInputQueryParam, SearchSourceBuilder sourceBuilder) {
         if (userInputQueryParam == null) {
             return;
         }
         getAggBuilder(userInputQueryParam, null, sourceBuilder, null);
     }
 
-    private static <E extends EsBaseSearchParam> void getAggBuilder(E userInputQueryParam, String nestedPath, SearchSourceBuilder sourceBuilder, AggregationBuilder aggregation) {
+    private static <E> void getAggBuilder(E userInputQueryParam, String nestedPath, SearchSourceBuilder sourceBuilder, AggregationBuilder aggregation) {
         Class<?> clazz = userInputQueryParam.getClass();
         List<Field> fields = getAllFields(clazz);
 
@@ -237,7 +237,7 @@ public class EsQueryParse {
                         if (value == null || field.getType() == String.class && StringUtils.isBlank((String) value)) {
                             continue;
                         }
-                        getAggBuilder((EsBaseSearchParam) value, nestedPath, sourceBuilder, aggregation);
+                        getAggBuilder(value, nestedPath, sourceBuilder, aggregation);
                     }
                     if (field.isAnnotationPresent(EsFilter.class)) {
                         if (value == null || field.getType() == String.class && StringUtils.isBlank((String) value)) {
@@ -310,7 +310,7 @@ public class EsQueryParse {
         }
     }
 
-    private static <E extends EsBaseSearchParam> BoolQueryBuilder getBoolQueryBuilder(E userInputQueryParam) {
+    private static <E> BoolQueryBuilder getBoolQueryBuilder(E userInputQueryParam) {
         return getBoolQueryBuilder(userInputQueryParam, null);
     }
 
@@ -447,7 +447,7 @@ public class EsQueryParse {
         return StringUtils.isNotBlank(v.getNested()) ? v.getNested() + "." + k : k;
     }
 
-    private static <E extends EsBaseSearchParam> BoolQueryBuilder getBoolQueryBuilder(E userInputQueryParam, String nestedPath) {
+    private static <E> BoolQueryBuilder getBoolQueryBuilder(E userInputQueryParam, String nestedPath) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         Class<?> clazz = userInputQueryParam.getClass();
         List<Field> fields = getAllFields(clazz);
@@ -804,14 +804,7 @@ public class EsQueryParse {
         return QueryBuilders.existsQuery(filedName);
     }
 
-    private static List<ExistsQueryBuilder> getNotNullQuery(List<String> value, String nestedPath) {
-        if (CollectionUtils.isEmpty(value)) {
-            return new ArrayList<>();
-        }
-        return value.stream().map(item -> getFiledName(item, nestedPath)).map(QueryBuilders::existsQuery).collect(Collectors.toList());
-    }
-
-    private static <E extends EsBaseSearchParam> NestedQueryBuilder getNestedQuery(Field field, E userInputQueryParam) {
+    private static <E> NestedQueryBuilder getNestedQuery(Field field, E userInputQueryParam) {
         EsNested esNested = field.getAnnotation(EsNested.class);
         String nestedPath = getFiledName(field, esNested.name(), "");
         QueryBuilder boolQueryBuilder = getBoolQueryBuilder(userInputQueryParam, nestedPath);
@@ -832,8 +825,7 @@ public class EsQueryParse {
      * @return
      */
     private static BoolQueryBuilder getMultiQuery(Field field, Object value, String nestedPath) {
-        BoolQueryBuilder boolQueryBuilder = getBoolQueryBuilder((EsBaseSearchParam) value, nestedPath);
-        return boolQueryBuilder;
+        return getBoolQueryBuilder((EsBaseSearchParam) value, nestedPath);
     }
 
     private static String getFiledName(Field field, String name, String nestedPath) {

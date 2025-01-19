@@ -14,7 +14,7 @@ import java.io.Serializable;
  */
 @Data
 @NoArgsConstructor
-public class SearchPageRequest<E extends EsBaseSearchParam> extends SearchBaseRequest<E> implements Serializable {
+public class SearchPageRequest<E> extends SearchBaseRequest<E> implements Serializable {
     private int     pageNum  = 1;
     private int     pageSize = 10;
 

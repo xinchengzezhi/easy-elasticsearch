@@ -12,7 +12,7 @@ import java.io.Serializable;
  * @Version 1.0
  */
 @Data
-public class ScrollRequest<E extends EsBaseSearchParam> extends SearchBaseRequest<E> implements Serializable {
+public class ScrollRequest<E> extends SearchBaseRequest<E> implements Serializable {
 
     /**
      * scrollId

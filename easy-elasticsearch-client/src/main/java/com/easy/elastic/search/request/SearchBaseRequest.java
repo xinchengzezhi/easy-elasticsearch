@@ -13,7 +13,7 @@ import java.util.function.Supplier;
  * @Date: 2023/4/6
  **/
 @Data
-public class SearchBaseRequest<E extends EsBaseSearchParam> implements Serializable {
+public class SearchBaseRequest<E> implements Serializable {
     /**
      * 入参
      */

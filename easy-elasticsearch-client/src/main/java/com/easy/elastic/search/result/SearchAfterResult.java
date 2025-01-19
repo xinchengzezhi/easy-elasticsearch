@@ -12,5 +12,5 @@ public class SearchAfterResult<R> implements Serializable {
 
     private List<Object> searchAfterList;
 
-    private Long         totalCount;
+    private long         totalCount;
 }
