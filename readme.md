@@ -1,9 +1,43 @@
 # 应用说明
-This is a lightweight Elasticsearch search component based on Java annotations, designed to simplify the complexities of working with Elasticsearch. Developers no longer need to worry about the intricate details of building ES query DSL strings. By simply annotating the relevant properties of Java objects based on business logic, developers can easily implement complex search functionality, significantly reducing development effort and time. 
-If you're interested in contributing to the open-source project or need technical consultation, feel free to contact us via email: 382576883lbl@gmail.com.
+Easy Elasticsearch: 注解驱动的轻量级Elasticsearch搜索组件
+Easy Elasticsearch: Annotation-Driven Lightweight Elasticsearch Search Component
 
-这是一款基于Java注解的轻量级Elasticsearch搜索组件，旨在解决Elasticsearch使用难度较大的问题。开发者无需关心复杂的ES查询DSL语句的构建细节，只需根据业务需求在Java对象属性上添加相应的注解，就能轻松实现高效的搜索功能，大大减少开发难度和时间成本。
-如果您对开源项目感兴趣，或需要咨询技术细节，或需要加入elastic中文社区，欢迎通过邮件与我们联系：382576883lbl@gmail.com。
+Easy Elasticsearch是一款革新性的Java注解驱动搜索组件，专为提升Elasticsearch检索开发效率而设计。我们的目标是简化复杂的ES查询流程，让开发者能够专注于业务逻辑，而非技术细节。
+Easy Elasticsearch is an innovative Java annotation-driven search component designed to enhance Elasticsearch retrieval development efficiency. Our goal is to simplify complex ES query processes, allowing developers to focus on business logic rather than technical details.
+
+核心优势：Core Advantages：
+1. 注解驱动：仅需在Java对象属性上添加简单注解，即可快速构建复杂查询
+   Annotation-Driven: Quickly build complex queries by adding simple annotations to Java object properties
+
+2. 低学习成本：无需深入学习复杂的Elasticsearch DSL语法
+   Low Learning Curve: No need to deeply learn complex Elasticsearch DSL syntax
+
+3. 高度灵活：支持多种查询场景，从简单检索到复杂聚合
+   Highly Flexible: Supports various query scenarios, from simple retrieval to complex aggregations
+
+4. 性能卓越：经过严格性能测试，保证高效查询
+   Excellent Performance: Guaranteed efficient queries through rigorous performance testing
+
+项目背景：Project Background：
+该组件由来自阿里巴巴等知名互联网公司的资深Elasticsearch专家联合打造。我们深谙企业级搜索技术的实际需求，将多年实践经验凝结于此。目前，已有数十家企业采用，在Elasticsearch中文社区获得广泛认可。
+This component is crafted by senior Elasticsearch experts from renowned internet companies like Alibaba. We deeply understand the practical needs of enterprise-level search technology, distilling years of practical experience into this tool. Currently, it has been adopted by dozens of enterprises and gained widespread recognition in the Elasticsearch Chinese community.
+
+我们的承诺：Our Commitment：
+- 持续迭代，快速响应用户需求
+  Continuous iteration, rapid response to user needs
+
+- 提供专业技术支持
+  Providing professional technical support
+
+- 开放协作，欢迎社区贡献
+  Open collaboration, welcoming community contributions
+
+加入我们：Join Us：
+- 技术咨询 / Technical Consultation
+- 使用建议 / Usage Suggestions
+- 社区交流 / Community Interaction
+
+联系方式 / Contact：382576883lbl@gmail.com
 
 ## 模块职责
 
@@ -30,6 +64,10 @@ spring.elasticsearch.rest.password= elastic
 
 `
 ### 3. Example 示例
+检索接口分3步:
+- 1. 构建检索字段的java类，
+- 2. 字段标识对应检索注解，
+- 3. 调检索接口
 ```java
 @Data
 public class EsSearchQuery implements Serializable {
@@ -74,18 +112,13 @@ public class EsSearchQuery implements Serializable {
     @EsNested(name = "subList")
     private EsNestedQuery         nestedQuery;
     
-    public String search() {
+    public List<EsSearchResponse> search(EsSearchQuery query) {
         SearchPageRequest<Object> request = new SearchPageRequest<>();
-        EsSearchQuery query = new EsSearchQuery();
-        query.setId("123");
-        EsOrgMultiQuery orgMultiQuery = new EsOrgMultiQuery();
-        orgMultiQuery.setCode("10005767661");
-        orgMultiQuery.setOrgContainSub("13453460001");
         request.setParam(query);
         request.setPageSize(20);
         request.setIndex("alias_idx_test");
-        SearchPageResult<Map> afterResult = esQueryService.search(request, Map.class);
-        return  JsonUtils.writeAsJson(afterResult);
+        SearchPageResult<EsSearchResponse> afterResult = esQueryService.search(request, Map.class);
+        return  afterResult.getRecords();
     }
 }
 ```
