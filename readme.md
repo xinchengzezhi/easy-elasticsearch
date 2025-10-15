@@ -115,3 +115,4 @@ public class EsSearchQuery implements Serializable {
     }
 }
 ```
+更详细说明：https://deepwiki.com/xinchengzezhi/easy-elasticsearch
